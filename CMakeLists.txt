@@ -15,21 +15,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_BUILD_TYPE "Debug")
 
-add_executable(fp fp_gen.cpp)
+add_executable(generate generate.cpp)
 
-target_link_libraries(fp
-                        cryptopp
-                        )
-
-add_executable(licence genLicense.cpp)
-
-target_link_libraries(licence
-                        cryptopp
-                        )
-
-add_executable(rsa rsa.cpp)
-
-target_link_libraries(rsa
+target_link_libraries(generate
                         cryptopp
                         )
 
