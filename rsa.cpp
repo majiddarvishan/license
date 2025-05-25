@@ -1,8 +1,8 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <fstream>
+// #include <iostream>
+// #include <string>
+// #include <vector>
+// #include <sstream>
+// #include <fstream>
 
 // Crypto++ headers (install Crypto++ library)
 #include <cryptopp/sha.h>
@@ -13,23 +13,6 @@
 #include <cryptopp/base64.h>
 #include <cryptopp/pssr.h>
 
-#ifdef _WIN32
-  #include <windows.h>
-  #include <iphlpapi.h>
-  #include <intrin.h>
-  #pragma comment(lib, "iphlpapi.lib")
-#else
-  #include <unistd.h>
-  #include <sys/types.h>
-  #include <sys/stat.h>
-  #include <sys/ioctl.h>
-  #include <net/if.h>
-  #include <netinet/in.h>
-  #include <sys/socket.h>
-  #include <ifaddrs.h>
-  #include <fcntl.h>
-  #include <linux/hdreg.h>
-#endif
 /*
  * ----- Generating RSA Key Pair -----
  * Use OpenSSL to create a 2048-bit private and public key:
