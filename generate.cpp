@@ -30,29 +30,17 @@ void generate_rsa()
       FileSink fs2("public.key"); pub.DEREncode(fs2);
 }
 
-void generate_fp()
+void generate_fp(std::string& fp)
 {
-    std::string fp = getHardwareFingerprint();
-
-    std::ofstream fpf("fingerprint.txt");
-    if (fpf.is_open()) {
-        fpf << fp;
-        fpf.close();
-    } else {
-        std::cerr << "Error opening fingerprint.txt for writing." << std::endl;
-    }
+    fp = getHardwareFingerprint();
 }
 
-void generate_license()
+void generate_license(const std::string& fp)
 {
     using namespace CryptoPP;
 
     std::string privKeyFile = "private.key";
-    std::string fpFile      = "fingerprint.txt";
     std::string outSigFile  = "license.sig";
-
-    std::ifstream fpf(fpFile);
-    std::string fingerprint((std::istreambuf_iterator<char>(fpf)), std::istreambuf_iterator<char>());
 
     FileSource fs(privKeyFile.c_str(), true);
     RSA::PrivateKey priv;
@@ -61,7 +49,7 @@ void generate_license()
     AutoSeededRandomPool rng;
     RSASS<PSSR, SHA256>::Signer signer(priv);
 
-    StringSource(fingerprint, true,
+    StringSource(fp, true,
         new SignerFilter(rng, signer,
             new Base64Encoder(
                 new FileSink(outSigFile.c_str())
@@ -74,8 +62,10 @@ void generate_license()
 int main()
 {
     generate_rsa();
-    generate_fp();
-    generate_license();
+
+    std::string fp;
+    generate_fp(fp);
+    generate_license(fp);
 
     return 0;
 }
