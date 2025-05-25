@@ -177,12 +177,12 @@ bool verifySignature(const std::string &fingerprint,
 int main(int argc, char* argv[]) {
     using namespace CryptoPP;
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <private.key> <out.sig> <fingerprint.txt>\n";
+        std::cerr << "Usage: " << argv[0] << " <private.key> <fingerprint.txt> <license.sig>\n";
         return 1;
     }
     std::string privKeyFile = argv[1];
-    std::string outSigFile  = argv[2];
-    std::string fpFile      = argv[3];
+    std::string fpFile      = argv[2];
+    std::string outSigFile  = argv[3];
 
     std::ifstream fpf(fpFile);
     std::string fingerprint((std::istreambuf_iterator<char>(fpf)), std::istreambuf_iterator<char>());
