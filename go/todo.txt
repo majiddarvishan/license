@@ -1,5 +1,3 @@
-Split deriveAESKey() across multiple files/functions.
-
 Add junk instructions, dynamic key material.
 
 Use tools like garble (go install mvdan.cc/garble@latest) to obfuscate.

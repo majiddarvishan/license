@@ -10,46 +10,46 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
-	"strings"
 )
 
 // getHardwareFingerprint collects:
 //  - first non-loopback MAC
-//  - DMI product serial
-//  - /etc/machine-id
-// and returns SHA256(mac||serial||machineID).
+//  - CPU serial from /proc/cpuinfo
+//  - disk serial from /sys/block/sda/device/serial
+// and returns SHA256(mac||cpuSerial||diskSerial).
 func getHardwareFingerprint() []byte {
-	var buf bytes.Buffer
+    var buf bytes.Buffer
 
-	// 1) MAC address
-	ifaces, err := net.Interfaces()
-	if err == nil {
-		for _, ifi := range ifaces {
-			if ifi.Flags&net.FlagLoopback == 0 && len(ifi.HardwareAddr) == 6 {
-				buf.Write(ifi.HardwareAddr)
-				break
-			}
-		}
-	}
+    // 1) MAC address (first non-loopback)
+    ifaces, err := net.Interfaces()
+    if err == nil {
+        for _, ifi := range ifaces {
+            if ifi.Flags&net.FlagLoopback == 0 && len(ifi.HardwareAddr) == 6 {
+                buf.Write(ifi.HardwareAddr)
+                break
+            }
+        }
+    }
 
-	// 2) DMI product serial
-	serial, err := ioutil.ReadFile("/sys/class/dmi/id/product_serial")
-	if err == nil {
-		s := strings.TrimSpace(string(serial))
-		buf.WriteString(s)
-	}
+    // 2) CPU info (hash entire /proc/cpuinfo)
+    if cpuInfo, err := os.ReadFile("/proc/cpuinfo"); err == nil {
+        buf.Write(cpuInfo)
+    }
 
-	// 3) Machine ID fallback
-	mid, err := ioutil.ReadFile("/etc/machine-id")
-	if err == nil {
-		buf.Write(bytes.TrimSpace(mid))
-	}
+    // // 3) Disk model & vendor
+    // if model, err := os.ReadFile("/sys/block/sda/device/model"); err == nil {
+    //     buf.Write(bytes.TrimSpace(model))
+    // }
+    // if vendor, err := os.ReadFile("/sys/block/sda/device/vendor"); err == nil {
+    //     buf.Write(bytes.TrimSpace(vendor))
+    // }
 
-	h := sha256.Sum256(buf.Bytes())
-	return h[:]
+    // Final SHA-256
+    sum := sha256.Sum256(buf.Bytes())
+    return sum[:]
+
 }
 
 // hexFingerprint returns fingerprint as hex string
