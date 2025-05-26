@@ -12,7 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	// "os"
+	"os"
 	"strings"
 )
 
@@ -57,10 +57,40 @@ func hexFingerprint() string {
 	return hex.EncodeToString(getHardwareFingerprint())
 }
 
-// deriveAESKey yields a 32-byte key (obfuscate in production)
+// deriveAESKey yields a 32-byte key, split across multiple helpers
 func deriveAESKey() []byte {
-	// example static key (32 bytes)
-	return []byte("12345678901234567890123456789012")
+	var key [32]byte
+	populatePart1(key[:16])
+	populatePart2(key[16:])
+	mixKeyFragments(key[:])
+	return key[:]
+}
+
+// populatePart1 fills the first half of the key
+func populatePart1(buf []byte) {
+	// obfuscated constants for part 1
+	part := []byte{0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF,
+					  0x10,0x32,0x54,0x76,0x98,0xBA,0xDC,0xFE}
+	for i := range buf {
+		buf[i] = part[i] ^ 0xA5
+	}
+}
+
+// populatePart2 fills the second half of the key
+func populatePart2(buf []byte) {
+	// obfuscated constants for part 2
+	part := []byte{0xFE,0xDC,0xBA,0x98,0x76,0x54,0x32,0x10,
+					  0xEF,0xCD,0xAB,0x89,0x67,0x45,0x23,0x01}
+	for i := range buf {
+		buf[i] = part[i] + 0x3C
+	}
+}
+
+// mixKeyFragments applies a final transformation across the full key
+func mixKeyFragments(key []byte) {
+	for i := range key {
+		key[i] = (key[i] + byte((i*31)&0xFF))
+	}
 }
 
 // encryptAndHMAC encrypts plaintext with AES-GCM, then appends HMAC-SHA256
