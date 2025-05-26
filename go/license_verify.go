@@ -10,7 +10,7 @@ import (
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage: license_verify <license.lic>")
-		return
+		os.Exit(1)
 	}
 	data, err := os.ReadFile(os.Args[1])
 	if err != nil {
@@ -21,19 +21,21 @@ func main() {
 	plain, err := decryptAndVerify(data, key)
 	if err != nil {
 		fmt.Println("Invalid license:", err)
-		return
+		os.Exit(1)
 	}
 
-	buf := bytes.NewReader(plain)
+	// parse version and fingerprint
+	r := bytes.NewReader(plain)
 	var version uint32
-	binary.Read(buf, binary.BigEndian, &version)
+	binary.Read(r, binary.BigEndian, &version)
 	fp := make([]byte, 32)
-	buf.Read(fp)
+	r.Read(fp)
 
-	actual := getHardwareFingerprint()
-	if !bytes.Equal(fp, actual) {
-		fmt.Println("License invalid for this machine.")
-		return
+	// verify fingerprint
+	if !bytes.Equal(fp, getHardwareFingerprint()) {
+		fmt.Println("Fingerprint mismatch")
+		os.Exit(1)
 	}
-	fmt.Printf("License valid. Version: %d\n", version)
+
+	fmt.Printf("License valid; version = %d\n", version)
 }
