@@ -15,14 +15,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_BUILD_TYPE "Debug")
 
-add_executable(generate generate.cpp)
-
-target_link_libraries(generate
-                        cryptopp
-                        )
-
-add_executable(verify verify.cpp)
-
-target_link_libraries(verify
-                        cryptopp
-                        )
+add_subdirectory(rsa)
+add_subdirectory(hmac)
