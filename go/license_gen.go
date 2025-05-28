@@ -19,10 +19,13 @@ func main() {
 		os.Exit(1)
 	}
 
+    hwid := CollectHardwareInfo()
+
 	// Build payload: version||fingerprint
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.BigEndian, version)
-	buf.Write(getHardwareFingerprint())
+	// buf.Write(getHardwareFingerprint())
+    buf.Write(hwid.GenerateShortID())
 
 	key := deriveAESKey()
 	lic, err := encryptAndHMAC(buf.Bytes(), key)

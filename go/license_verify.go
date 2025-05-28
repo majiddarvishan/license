@@ -31,8 +31,11 @@ func main() {
 	fp := make([]byte, 32)
 	r.Read(fp)
 
+    hwid := CollectHardwareInfo()
+
 	// verify fingerprint
-	if !bytes.Equal(fp, getHardwareFingerprint()) {
+	// if !bytes.Equal(fp, getHardwareFingerprint()) {
+    if !bytes.Equal(fp, hwid.GenerateShortID()) {
 		fmt.Println("Fingerprint mismatch")
 		os.Exit(1)
 	}
