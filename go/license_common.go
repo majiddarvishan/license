@@ -17,6 +17,8 @@ import (
 	"os/exec"
 	"runtime"
 	"sort"
+
+    "github.com/shirou/gopsutil/v3/cpu"
 )
 
 // HardwareID represents different hardware identifiers
@@ -85,29 +87,73 @@ func GetCPUInfo() (string, error) {
 }
 
 func getCPUInfoLinux() (string, error) {
-	data, err := os.ReadFile("/proc/cpuinfo")
+	// Get CPU info
+	infoStats, err := cpu.Info()
+	if err != nil || len(infoStats) == 0 {
+		fmt.Println("Error getting CPU info:", err)
+		return "", err
+	}
+	cpuModel := infoStats[0].ModelName
+	cpuFreq := fmt.Sprintf("%.2f MHz", infoStats[0].Mhz)
+
+	// Get core counts
+	physicalCores, err := cpu.Counts(false)
 	if err != nil {
+		fmt.Println("Error getting physical core count:", err)
+		return "", err
+	}
+	logicalCores, err := cpu.Counts(true)
+	if err != nil {
+		fmt.Println("Error getting logical core count:", err)
 		return "", err
 	}
 
-	lines := strings.Split(string(data), "\n")
-	var cpuInfo []string
+	// Get average CPU usage over 1 second
+	// percentages, err := cpu.Percent(time.Second, false)
+	// if err != nil || len(percentages) == 0 {
+	// 	fmt.Println("Error getting CPU usage:", err)
+	// 	return
+	// }
+	// avgCPUUsage := fmt.Sprintf("%.2f%%", percentages[0])
 
-	for _, line := range lines {
-		if strings.Contains(line, "model name") ||
-		   strings.Contains(line, "cpu family") ||
-		   strings.Contains(line, "vendor_id") ||
-           strings.Contains(line, "stepping") {
-			cpuInfo = append(cpuInfo, strings.TrimSpace(line))
-		}
+	// Merge into a single string
+	result := []string{
+		"Model: " + cpuModel,
+		fmt.Sprintf("Physical Cores: %d", physicalCores),
+		fmt.Sprintf("Logical CPUs: %d", logicalCores),
+		"Frequency: " + cpuFreq,
+		// "Usage: " + avgCPUUsage,
 	}
 
-	if len(cpuInfo) > 0 {
-		return cpuInfo[0], nil // Return first CPU's info
-	}
+	finalStr := strings.Join(result, " | ")
 
-	return "", fmt.Errorf("CPU info not found")
+	return finalStr, nil
 }
+
+// func getCPUInfoLinux() (string, error) {
+// 	data, err := os.ReadFile("/proc/cpuinfo")
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	lines := strings.Split(string(data), "\n")
+// 	var cpuInfo []string
+
+// 	for _, line := range lines {
+// 		if strings.Contains(line, "model name") ||
+// 		   strings.Contains(line, "cpu family") ||
+// 		   strings.Contains(line, "vendor_id") ||
+//            strings.Contains(line, "stepping") {
+// 			cpuInfo = append(cpuInfo, strings.TrimSpace(line))
+// 		}
+// 	}
+
+// 	if len(cpuInfo) > 0 {
+// 		return cpuInfo[0], nil // Return first CPU's info
+// 	}
+
+// 	return "", fmt.Errorf("CPU info not found")
+// }
 
 func getCPUInfoMacOS() (string, error) {
 	cmd := exec.Command("sysctl", "-n", "machdep.cpu.brand_string")
@@ -305,13 +351,13 @@ func (h *HardwareID) GenerateUniqueID() string {
 		components = append(components, "cpu:"+h.CPUInfo)
 	}
 
-	if len(h.MACAddresses) > 0 {
-		components = append(components, "mac:"+strings.Join(h.MACAddresses, ","))
-	}
+	// if len(h.MACAddresses) > 0 {
+	// 	components = append(components, "mac:"+strings.Join(h.MACAddresses, ","))
+	// }
 
-	if h.DiskSerial != "" {
-		components = append(components, "disk:"+h.DiskSerial)
-	}
+	// if h.DiskSerial != "" {
+	// 	components = append(components, "disk:"+h.DiskSerial)
+	// }
 
 	// Join all components and hash
 	combined := strings.Join(components, "|")
